@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\OrderInvoiceController;
+use App\Http\Controllers\Api\OrderTransitionController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductStockController;
 use App\Http\Middleware\EnsureIdempotency;
@@ -35,4 +37,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware(['throttle:orders', EnsureIdempotency::class])
         ->name('orders.store');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/pay', [OrderTransitionController::class, 'pay'])->name('orders.pay');
+    Route::post('/orders/{order}/ship', [OrderTransitionController::class, 'ship'])->name('orders.ship');
+    Route::post('/orders/{order}/complete', [OrderTransitionController::class, 'complete'])->name('orders.complete');
+    Route::post('/orders/{order}/cancel', [OrderTransitionController::class, 'cancel'])->name('orders.cancel');
+    Route::get('/orders/{order}/invoice', [OrderInvoiceController::class, 'show'])->name('orders.invoice');
 });
