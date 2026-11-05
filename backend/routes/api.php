@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductStockController;
 use App\Http\Middleware\EnsureIdempotency;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/auth/me', [AuthController::class, 'me'])->name('auth.me');
 
     Route::apiResource('products', ProductController::class);
+    Route::post('/products/{product}/stock-adjustments', [ProductStockController::class, 'adjust'])->name('products.stock-adjustments');
+    Route::get('/products/{product}/stock-movements', [ProductStockController::class, 'movements'])->name('products.stock-movements');
 
     Route::apiResource('customers', CustomerController::class);
 
