@@ -7,6 +7,9 @@ namespace App\Providers;
 use App\Domain\Order\OrderStateMachine;
 use App\Domain\Order\OrderTotalCalculator;
 use App\Models\User;
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -29,6 +32,12 @@ class AppServiceProvider extends ServiceProvider
         Model::shouldBeStrict(! $this->app->isProduction());
 
         Gate::define('view-reports', fn (User $user): bool => $user->isAdmin());
+
+        // Dokumentasi OpenAPI 3 (Scramble) di /docs/api — dibuka publik untuk keperluan review.
+        Gate::define('viewApiDocs', fn (?User $user = null): bool => true);
+        Scramble::configure()->withDocumentTransformers(function (OpenApi $openApi): void {
+            $openApi->secure(SecurityScheme::http('bearer'));
+        });
 
         // 5 percobaan login / menit per kombinasi email + IP (mencegah brute force).
         RateLimiter::for('login', function (Request $request): Limit {

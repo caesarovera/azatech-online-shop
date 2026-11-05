@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderInvoiceController;
 use App\Http\Controllers\Api\OrderTransitionController;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Route;
 | Otorisasi per role ditegakkan di Policy/Gate di dalam controller, bukan di sini,
 | supaya aturan role ada di satu tempat (app/Policies).
 */
+
+Route::get('/health', HealthController::class)->name('health');
 
 Route::post('/auth/login', [AuthController::class, 'login'])
     ->middleware('throttle:login')
