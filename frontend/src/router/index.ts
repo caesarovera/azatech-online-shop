@@ -17,6 +17,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/components/AppLayout.vue'),
     children: [
       { path: '', name: 'dashboard', component: () => import('@/views/DashboardView.vue'), meta: { title: 'Dashboard' } },
+      { path: 'products', name: 'products', component: () => import('@/views/ProductsView.vue'), meta: { title: 'Produk' } },
+      { path: 'products/new', name: 'product-create', component: () => import('@/views/ProductFormView.vue'), meta: { roles: ['admin'], title: 'Tambah Produk' } },
+      { path: 'products/:id/edit', name: 'product-edit', component: () => import('@/views/ProductFormView.vue'), meta: { roles: ['admin'], title: 'Ubah Produk' } },
+      { path: 'products/:id/stock', name: 'product-stock', component: () => import('@/views/ProductStockView.vue'), meta: { roles: ['admin'], title: 'Stok Produk' } },
+      { path: 'customers', name: 'customers', component: () => import('@/views/CustomersView.vue'), meta: { title: 'Pelanggan' } },
+      { path: 'customers/new', name: 'customer-create', component: () => import('@/views/CustomerFormView.vue'), meta: { title: 'Tambah Pelanggan' } },
+      { path: 'customers/:id/edit', name: 'customer-edit', component: () => import('@/views/CustomerFormView.vue'), meta: { title: 'Ubah Pelanggan' } },
       { path: 'forbidden', name: 'forbidden', component: () => import('@/views/ForbiddenView.vue'), meta: { title: 'Akses ditolak' } },
     ],
   },
