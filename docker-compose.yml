@@ -1,0 +1,135 @@
+# Menjalankan SELURUH stack: postgres, redis, mailpit, migrate (one-shot), api, worker, scheduler, web.
+#
+#   docker compose up -d --build
+#
+# Semua nilai punya default untuk development lokal. Untuk mengganti, buat file .env (lihat .env.example).
+name: azatech-shop
+
+x-backend: &backend
+  build:
+    context: ./backend
+  image: azatech-shop-api:local
+  environment:
+    APP_NAME: "Azatech Online Shop"
+    APP_ENV: ${APP_ENV:-production}
+    APP_DEBUG: ${APP_DEBUG:-false}
+    APP_KEY: ${APP_KEY:-}
+    APP_URL: http://localhost:8000
+    APP_TIMEZONE: Asia/Jakarta
+    FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+    LOG_CHANNEL: json
+    LOG_LEVEL: info
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: 5432
+    DB_DATABASE: ${DB_DATABASE:-azatech}
+    DB_USERNAME: ${DB_USERNAME:-azatech}
+    DB_PASSWORD: ${DB_PASSWORD:-azatech-local}
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    CACHE_STORE: redis
+    QUEUE_CONNECTION: redis
+    SESSION_DRIVER: array
+    MAIL_MAILER: smtp
+    MAIL_HOST: mailpit
+    MAIL_PORT: 1025
+    MAIL_FROM_ADDRESS: noreply@azatech.local
+    SANCTUM_EXPIRATION: ${SANCTUM_EXPIRATION:-480}
+  volumes:
+    - invoices:/var/www/html/storage/app/private
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-azatech}
+      POSTGRES_USER: ${DB_USERNAME:-azatech}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-azatech-local}
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "8025:8025" # UI: http://localhost:8025
+      - "1025:1025" # SMTP
+
+  # One-shot: migrate + seed (seeder dilewati jika data sudah ada), lalu container berhenti.
+  migrate:
+    <<: *backend
+    command: ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force"]
+    restart: "no"
+    healthcheck:
+      disable: true
+
+  api:
+    <<: *backend
+    ports: ["8000:8080"]
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    command: ["php", "/var/www/html/artisan", "queue:work", "redis", "--sleep=1", "--max-time=3600"]
+    stop_signal: SIGTERM
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck-queue"]
+      start_period: 10s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+
+  scheduler:
+    <<: *backend
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    stop_signal: SIGTERM
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck-schedule"]
+      start_period: 10s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+    image: azatech-shop-web:local
+    ports: ["5173:8080"]
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
+  invoices:
