@@ -6,12 +6,18 @@
 |---|---|
 | **Claude Code** (Anthropic, keluarga model Claude) — sesi cloud | Scaffolding proyek, menulis sebagian besar kode backend & frontend, test, Dockerfile, CI, dan draft dokumentasi |
 
+## Latar belakang & kapasitas saya
+
+Saya PHP developer di level middle. Soal ini ditulis untuk level senior, dan topik yang paling menantang
+(pessimistic locking, idempotency, concurrency test, Docker multi-stage) sedang saya pelajari. Karena itu
+**hampir seluruh kode, test, konfigurasi infrastruktur, dan draf dokumentasi di repository ini dihasilkan oleh
+Claude Code**. Peran saya adalah mengambil keputusan, mempelajari kodenya, dan menjawab pertanyaan DECISIONS.md.
+
 ## Bagian yang dikerjakan dengan bantuan AI
 
-Secara jujur: **sebagian besar kode awal di repository ini dihasilkan dengan bantuan Claude Code**, lalu saya
-review, jalankan, dan uji. Rinciannya:
+Verifikasi di tabel ini dilakukan oleh Claude Code selama sesi pengerjaan:
 
-| Area | Bantuan AI | Verifikasi yang dilakukan |
+| Area | Bantuan AI | Verifikasi yang dilakukan (oleh AI) |
 |---|---|---|
 | Migration, model, enum, factory, seeder | Dihasilkan AI | `migrate:fresh --seed` di PostgreSQL; cek ledger = stok untuk semua produk (query SQL) |
 | State machine, kalkulator total | Dihasilkan AI | Unit test semua transisi valid/invalid/role |
@@ -39,16 +45,16 @@ Claude Code menjadi satu commit per tugas soal** (nomor bagian soal tercantum di
 Setiap commit diverifikasi dengan menjalankan test pada saat disusun. Karena itu waktu commit berdekatan dan
 tidak menggambarkan durasi pengerjaan tiap tugas.
 
-## Bagian yang saya tulis atau ubah sendiri
+## Bagian yang saya kerjakan atau putuskan sendiri
 
-Catatan perubahan manual saya (di luar output AI) dicatat di tabel ini seiring pengerjaan dan latihan:
+| Bagian | Yang saya lakukan |
+|---|---|
+| Pilihan stack | Memilih Track B (Laravel) dan Vue 3 + Vite untuk frontend |
+| Repository | Membuat repository, mengatur default branch ke `main`, menentukan riwayat commit dan branch disusun per tugas soal |
+| DECISIONS.md | Menjawab keempat pertanyaan lewat tanya-jawab dengan AI. Sebagian kalimat di poin (a) dan (c) mengikuti penjelasan AI yang sudah saya pahami, sisanya kata-kata saya sendiri. AI merapikan ejaan, menambahkan rujukan file/fungsi, dan mengecek kecocokan dengan kode. Untuk poin (c), bug-nya ditemukan oleh AI saat smoke test; penjelasannya saya tulis sendiri |
 
-| Tanggal | File / fungsi | Perubahan |
-|---|---|---|
-| | | |
+## Rencana saya sebelum sesi review
 
-## Bagaimana saya memastikan memahami kode
-
-- Membaca ulang setiap use case dari route → Form Request → Policy → Action → Service → Model.
-- Menjalankan test dan sengaja merusak bagian penting (lock, state machine) untuk melihat test yang gagal.
-- Latihan live change (menambah fitur kecil + test) pada repository ini.
+- Menjalankan aplikasi dengan `docker compose up` dan mencoba alur order sebagai admin dan kasir.
+- Membaca alur `POST /api/orders` dari route → Form Request → Action → `StockService` → database.
+- Latihan perubahan kecil (live change) beserta test-nya di repository ini.
